@@ -1,0 +1,11 @@
+{
+    "style": "shuf:styles",
+    "age": "rand:age",
+    "sex": "female",
+    "ethnicity": "rand:races",
+    "skin_color": "rand:skincolors",
+    "eye_color": "rand:eyecolors",
+    "complexion": "rand:complexions",
+    "expression": "friendly smile with visible teeth",
+    "hair_color": "rand:haircolors"
+}

@@ -160,6 +160,13 @@ wildcard files, `-l` to list available wildcards in that directory,
 the `tests` directory), and a `-x` option for a comma-separated list
 of fields to completely delete from the JSON.
 
+Example:
+
+```
+shuf data/0001.jsonl | head -1 |
+    ./scripts/upcycle.py -f tests/upcycle1girl.json
+```
+
 
 ## Vision
 
