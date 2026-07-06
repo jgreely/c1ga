@@ -1,0 +1,5 @@
+red
+0.25x blue
+green
+2x orange
+white

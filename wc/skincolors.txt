@@ -1,0 +1,48 @@
+3x alabaster
+3x albino-pale
+3x almond
+3x amber
+3x ash
+bluish-black
+3x brown
+caramel
+charcoal-brown
+chestnut
+chocolate-brown
+cocoa
+copper-brown
+dark-olive
+deep-sienna
+3x dusky-rose
+ebony
+espresso
+3x fair
+3x fair-beige
+5x freckled-fair
+3x ivory
+jet-brown
+3x light-olive
+mahogany
+midnight-brown
+mocha
+3x neutral-fair
+3x neutral-olive
+obsidian
+onyx
+3x peach
+pitch-black
+raven-brown
+reddish-brown
+rich-caramel
+rich-umber
+3x rosy-fair
+3x rosy-medium
+3x sandy-beige
+3x soft-tan
+3x sun-kissed-glow
+3x sun-kissed-tan
+3x tan
+toffee
+velvet-ebony
+warm-ebony
+3x warm-tan

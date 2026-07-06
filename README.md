@@ -1,0 +1,234 @@
+
+# Certified 1-Girl Archives
+
+## License
+
+All LLM output, by definition, is copyright-free. All other content is
+available under a standard MIT license.
+
+
+## Purpose
+
+Convert a large archive of glamour/fashion/idol photographs into
+usable GenAI image prompts. I'm targeting only modern image models
+that can do something sensible with paragraphs or simple JSON schemas.
+While only Ideogram 4 really makes use of JSON for complex,
+predictable composition, Flux.2-Klein-9B and Krea 2 Turbo produce
+excellent results from the schema described below. They don't follow
+it 100%, but it still works, and the `upcycle` script exploits the
+schema to programmatically add diversity to prompts, basically using
+each prompt as a template.
+
+Probably the best results would come from running the upcycled JSON
+through an LLM like Gemma-4 using the system prompt in
+`sysprompts/markdown.txt`, creating a single flowing paragraph, but
+due to the subject matter, you'll want to use an uncensored,
+abliterated, or "heretic" version of the LLM for best results. I do
+this with the `prompt` script from my [GenAI
+Stuff](https://github.com/jgreely/genaistuff) repo, which is currently
+tied to the `lmstudio` SDK (TODO: migrate to `litellm` for more
+flexibility).
+
+The core of the processing is the `sysprompts/vision.txt` system
+prompt and a vision model like `qwen3-vl-4b` (which has not complained
+about the content of any of the images in my archive, which include
+nudity but not sexual activity), which produces a Markdown dictionary
+list using a *relatively* consistent set of keys.
+
+The script `md2jsonl` processes all Markdown files listed on STDIN
+(one per line), sanitizing keys and values, and adding a UUID for QA
+testing. There are a few edge cases it doesn't handle yet, but it
+rejects only a small fraction of my photos.
+
+
+## Dataset
+
+The compiled dataset consists of numbered JSONL files in
+`data/NNNN.jsonl`, each containing 5,000 lines, one JSON prompt per
+line. The contents are in no particular order, and in fact were
+shuffled before being split. The size was chosen for convenient
+maintenance.
+
+
+## JSON prompt schema
+
+The basic structure of a processed promptis shown below. The five
+top-level fields will always be present, with default values for
+style, setting, and composition inserted by `md2jsonl` if necessary.
+There will be at least one entry in the subject list, but all fields
+are optional, and are not limited to the ones below.
+
+```
+{
+    "style": "",
+    "setting": "",
+    "composition": "",
+    "subject": [
+        {
+            "subject": "",
+            "lighting_type": "",
+            "lighting_intensity": "",
+            "lighting_source": "",
+            "camera_angle": "",
+            "color_palette": "",
+            "sex": "",
+            "age": "",
+            "pose": "",
+            "expression": "",
+            "complexion": "",
+            "figure": "",
+            "ethnicity": "",
+            "clothing": "",
+            "accessories": "",
+            "hair_color": "",
+            "eye_color": "",
+            "eye_shape": "",
+            "skin_color": "",
+            "hair_length": "",
+            "hair_style": "",
+            ...
+        },
+        ...
+    ],
+    "comment": "a uuid"
+}
+```
+
+The UUID in the "comment" field is at the end to minimize its impact
+on the output. If a prompt contains references like "text overlay on
+left", it's possible for a model to decide that the comment field
+should be that text. They can be removed entirely by running the JSONL
+file through `jq 'del(.comment)'`.
+
+
+## Scripts
+
+- `scripts/md2jsonl.py` - convert LLM-analyzed prompts from Markdown
+  to JSON, with cleaned-up structure and field names.
+
+- `scripts/upcycle.py` - inject new field values into JSON prompts,
+  both static text and random/shuffled/sorted/sequential wildcards.
+  This can also be used to script updates for LLM-generated tagsets
+  and prompts (with appropriate quoting; should do in python...):
+
+- `scripts/dupe.py` - duplicate each line from STDIN N times (default
+  10); useful for upcycling the same prompt several different ways.
+
+
+## Wildcards in `upcycle`
+
+The text-replacement system is pretty simple. The command-line format
+is `field=value`, where *every instance of that field* is replaced by
+the value, which can be either a literal string or a wildcard lookup.
+
+- `field` indicates which dict key in the JSON is to be replaced.
+
+- `value` may contain any valid Unicode string, and will be searched
+  for possible wildcard references; any text that does not match the
+  name of a wildcard will be left alone.
+
+- valid wildcard names consist of lowercase letters a-z only, and will
+  be searched for in the wildcard directory (default `./wc`) as
+  $wc.txt.
+
+- So, for `pose=actionpose`, assuming a file named `actionpose.txt`,
+  every `pose` field in the prompt will be replaced a line selected
+  from the file.
+
+- By default, wildcards are selected sequentially, wrapping around
+  when they've all been used once. The wildcard can be optionally
+  prefixed with "rand", "shuf", or "sort" followed by a colon. "shuf"
+  and "sort" change the order of the wildcard items, while "rand" just
+  grabs a random one each time.
+
+- If an exclamation point is used instead of a colon, then that
+  wildcard is looked up only once per prompt, and the value is reused
+  for other instances of that field. (i.e., `hair_color=shuf!colors`
+  would make all subjects in one prompt blonde, all subjects in the
+  next one redheads, etc)
+
+- Wildcard files contain one line per value, with optional weights set
+  by prefixing the line with "Nx ", where N is a non-negative
+  floating-point number. Any line without a weight has its weight set
+  to 1. Weighted-random selection is *only* used in the "rand" mode,
+  and ignored for all other modes. Blank lines and lines beginning
+  with "#" are ignored.
+
+`upcycle` accepts a `-d` option to set the directory to look for
+wildcard files, `-l` to list available wildcards in that directory,
+`-f` to process a JSON file containing key/val pairs (see samples in
+the `tests` directory), and a `-x` option for a comma-separated list
+of fields to completely delete from the JSON.
+
+
+## Vision
+
+All photos were analyzed by `qwen3-vl-4b`, with the system prompt set
+to the contents of `sysprompts/vision.txt`. This creates a
+*relatively* consistent Markdown-format list which can be processed by
+`md2jsonl`.
+
+Efforts have been made to remove anime-style and AI-generated images
+from the sources used, but I'm sure I missed a few. Send me the UUIDs
+and I'll fix them.
+
+`md2jsonl` makes a best-effort attempt to add an "nsfw" tag to all
+suggestive images, but it relies on searching for a short list of
+keywords, which will allow some naughtiness to escape notice.
+
+
+## Conversion to paragraph prompt
+
+The contents of `sysprompts/markdown.txt` can be used to generate
+high-quality single-paragraph prompts from the JSON. It's copied from
+the Hidream repo, and works extremely well with most LLMs. For best
+results, use an uncensored or abliterated local model.
+
+
+## Source Photographs
+
+There is no porn here. Nudity, yes. Suggestive posing, definitely.
+Women kissing and/or caressing, yeah, that happens. None of the source
+photos feature genital contact involving mouths, hands, other
+genitals, household appliances, objects, tentacles, or pets. In the
+words of Alton Brown, "that's another show".
+
+Because the majority of original photos appeared in Japanese magazines
+and web sites, there's a strong bias toward dark hair and dark eyes,
+even though the LLM rarely included a specific ethnic origin. Using
+`upcycle` to replace the "hair_color", "eye_color", and/or
+"skin_color" fields will significantly increase diversity, even
+without using something like `ethnicity=rand:races`.
+
+The Japanese origin also explains the presence of cosplay outfits
+and animal ears.
+
+While most quoted text has been removed, there are some cases where
+the LLM simply said things like "with text overlay", which will create
+random text in an image. These are found almost entirely in the
+"setting", "composition", and "style" top-level fields, and I've tried
+to regex out the most common patterns.
+
+Note that the "age" field was present in less than 15% of the prompts,
+which would leave it up to the image-generation model. This is unwise,
+and I added a default 'College-age' value. In the handful of cases
+where the LLM mistakenly interpreted youthful Japanese features as
+"young girl", "teen", or "child", I have corrected it to "young
+woman".
+
+There are also defaults added for "setting" ("Intimate Boudoir
+Setting"), "style" ("Natural Lifestyle Photography"), and
+"composition" ("Centered"). All default values have caps to
+distinguish them from LLM-generated values.
+
+Every image should have an adult woman as the primary subject. If any
+of them don't, the UUID in the comment field can be used to file bug
+reports.
+
+Prompts will be added to the collection in batches of 5,000, after
+being manually reviewed. Before publishing a batch, I generate a
+256x256 image for each prompt using Krea 2 Turbo, and quickly
+[deathmatch](https://github.com/jgreely/deathmatch) them. It's
+possible that a GenAI image in the source material slipped through all
+my checks, but I'm pretty sure I caught most of them by their
+filenames and obvious subject matter.
