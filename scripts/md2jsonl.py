@@ -45,7 +45,7 @@ def clean_val(val):
         (r' with (stylized |Japanese )?text.*$', ''),
         (r' with (stylized )?magazine layout.*$', ''),
         (r' with calendar overlay.*$', ''),
-        (r' with (a ?speech bubble.*$', ''),
+        (r' with (a ?)speech bubble.*$', ''),
         (r'^speech bubble.*$', ''),
         # yeah, LLMs are not good at age recognition...
         (r'young girl([., ])', r'young woman\1'),
