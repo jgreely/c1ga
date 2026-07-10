@@ -13,6 +13,7 @@ parser = argparse.ArgumentParser(
     description = 'duplication each line from STDIN N times (default 10)')
 parser.add_argument('count',
     nargs = '?',
+    type = int,
     default = 10,
     help='number of times to duplicate each line (default 10)')
 args=parser.parse_args()
