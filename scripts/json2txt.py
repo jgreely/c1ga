@@ -16,8 +16,14 @@ parser.add_argument('datasets', nargs = '*',
     help='JSONL dataset files (output will be written as $path.txt)')
 args = parser.parse_args()
 
+if len(args.datasets) == 0:
+    args.datasets = [ 'stdin' ]    
 for infile in args.datasets:
-    outfile = open(f"{os.path.splitext(infile)[0]}.txt", "w")
+    if infile == 'stdin':
+        infile = sys.stdin.fileno()
+        outfile = sys.stdout
+    else:
+        outfile = open(f"{os.path.splitext(infile)[0]}.txt", "w")
     with open(infile) as jsonl:
         for line in jsonl:
             output = []
@@ -31,4 +37,6 @@ for infile in args.datasets:
                     subject_output.append(f"{key}: {subject[key]}")
                 output.append(f"Subject {n} = {'; '.join(subject_output)}")
                 n += 1
+            if 'comment' not in data:
+                data['comment'] = ''
             print(data['comment'], f"{'. '.join(output)}.", file=outfile)

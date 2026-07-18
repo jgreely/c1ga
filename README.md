@@ -123,6 +123,10 @@ file through `jq -c 'del(.comment)'`.
 - `scripts/json2txt.py` - flatten a JSONL dataset into a single-line
   "paragraph" consisting of key/val pairs.
 
+- `scripts/1gmixer.py` - select top-level fields from 4 prompts to
+  merge into a new one. Best used with `shuf` and `upcycle` to increase
+  variety.
+
 ## Wildcards in `upcycle`
 
 The text-replacement system is pretty simple. The command-line format
