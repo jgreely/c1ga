@@ -21,7 +21,7 @@ jsonfiles.sort()
 
 version = f"{version}.{len(jsonfiles)}"
 
-with gzip.open(f"release-{version}.jsonl.gz", "wt", encoding="utf-8") as z:
+with gzip.open(f"c1ga-{version}.jsonl.gz", "wt", encoding="utf-8") as z:
     for file in jsonfiles:
         base = os.path.splitext(file)[0]
         promptfile = f"data/{base}-prompt.txt"
