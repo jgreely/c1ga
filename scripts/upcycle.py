@@ -53,6 +53,13 @@ def init():
     parser.add_argument('-D', '--debug',
         action='store_true',
         help='upcase replacements so they stand out')
+    parser.add_argument('-e', '--llm-enhance',
+        action='append',
+        help='''
+            fields to mark for LLM enhancement using prompt.py;
+            if the value contains '=', the string after that is
+            a sysprompt name.
+        ''')
     parser.add_argument('-f', '--file',
         type=str,
         help='''
@@ -115,6 +122,11 @@ def init():
         val = keyvals[key] 
         save_val = False
         mode = 'seq'
+        if match := re.match(r'^@([^@]+)@', val):
+            llm_wrap = match.group(1)
+            val = val[match.end():]
+        else:
+            llm_wrap = False
         if ':' in val:
             mode, val = val.split(':', 1)
         elif '!' in val:
@@ -150,9 +162,10 @@ def init():
             "i": 0,
             "save": save_val,
             "data": data,
+            "wrap": llm_wrap,
             "weights": weights
         }
-    return args.debug
+    return args.debug, args.llm_enhance
 
 
 def nextval(wildcard, saved_val, debug):
@@ -162,7 +175,13 @@ def nextval(wildcard, saved_val, debug):
         sys.exit()
     wc = wildcards[wildcard]
     if wildcard in saved_val and wc['save']:
-        return saved_val[wildcard]
+        if wc['wrap']:
+            if type(wc['wrap']) == str:
+                return f"@<{wc['wrap']}:{saved_val[wildcard]}>@"
+            else:
+                return f"@<{saved_val[wildcard]}>@"
+        else:
+            return saved_val[wildcard]
     if len(wc['data']) == 1:
         result = wc['data'][0]
     elif wc['mode'] == 'rand':
@@ -181,13 +200,19 @@ def nextval(wildcard, saved_val, debug):
     if debug:
         return result.upper()
     else:
-        return result
+        if wc['wrap']:
+            if type(wc['wrap']) == str:
+                return f"@<{wc['wrap']}:{result}>@"
+            else:
+                return f"@<{result}>@"
+        else:
+            return result
 
 
 
 wildcards = {}
 exclude = []
-DEBUG = init()
+DEBUG, llm_enhance = init()
 
 # Note: assumes my JSON-prompt structure
 for line in sys.stdin:
@@ -203,4 +228,17 @@ for line in sys.stdin:
     for key in exclude:
         for subject in data['subject']:
             del subject[key]
+    for field in llm_enhance:
+        sysprompt = ''
+        if '=' in field:
+            key, sysprompt = field.split('=')
+            sysprompt += ':'
+        else:
+            key = field
+        if key in ['style', 'setting', 'composition']:
+            data[key] = f"@<{sysprompt}{data[key]}>@"
+        else:
+            if 'subject' in data:
+                for subject in data['subject']:
+                    subject[key] = f"@<{sysprompt}{subject[key]}>@"
     print(json.dumps(data))
