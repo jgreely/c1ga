@@ -10,7 +10,7 @@ import argparse
 parser = argparse.ArgumentParser(
     prog='dupe',
     formatter_class = argparse.RawDescriptionHelpFormatter,
-    description = 'duplication each line from STDIN N times (default 10)')
+    description = 'duplicate each line from STDIN N times (default 10)')
 parser.add_argument('count',
     nargs = '?',
     type = int,

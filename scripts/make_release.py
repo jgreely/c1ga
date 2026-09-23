@@ -11,7 +11,7 @@ import sys
 import json
 import gzip
 
-version = '1.0'
+version = '1.1'
 
 jsonfiles = []
 for jsonfile in os.listdir('data'):
@@ -25,11 +25,17 @@ with gzip.open(f"c1ga-{version}.jsonl.gz", "wt", encoding="utf-8") as z:
     for file in jsonfiles:
         base = os.path.splitext(file)[0]
         promptfile = f"data/{base}-prompt.txt"
+        tagfile = f"data/{base}-cleantags.txt"
         if not os.path.exists(promptfile):
             print(f"Warning: '{promptfile}' not found, skipping")
             continue
+        if not os.path.exists(tagfile):
+            print(f"Warning: '{tagfile}' not found, skipping")
+            continue
         with open(promptfile) as p:
             prompts = [ x.rstrip() for x in p ]
+        with open(tagfile) as t:
+            tags = [ x.rstrip() for x in t ]
         with open(f"data/{file}") as f:
             for line in f:
                 json_record = json.loads(line)                
@@ -38,5 +44,6 @@ with gzip.open(f"c1ga-{version}.jsonl.gz", "wt", encoding="utf-8") as z:
                 z.write(json.dumps({
                     'prompt': prompts.pop(0),
                     'uuid': uuid,
-                    'json': json.dumps(json_record)
+                    'json': json.dumps(json_record),
+                    'tags': tags.pop(0)
                 }) + '\n')

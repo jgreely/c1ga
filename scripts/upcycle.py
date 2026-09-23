@@ -55,6 +55,7 @@ def init():
         help='upcase replacements so they stand out')
     parser.add_argument('-e', '--llm-enhance',
         action='append',
+        default=[],
         help='''
             fields to mark for LLM enhancement using prompt.py;
             if the value contains '=', the string after that is
@@ -149,6 +150,10 @@ def init():
                         weights.append(1.0)
                     data.append(line.rstrip())
         else:
+            if ' ' not in file and mode != 'seq':
+                # single-word replacements are unlikely if mode was set
+                print(f"Warning: possible missing wildcard file '{file}'",
+                    file=sys.stderr)
             file = ''
             data = [val]
             weights = []

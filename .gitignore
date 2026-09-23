@@ -6,3 +6,7 @@ release-*
 c1ga-*.gz
 .DS_Store
 0*-tags.txt
+0*-cleantags.txt
+.cache-*
+*-
+ranked-tags.txt

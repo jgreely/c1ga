@@ -63,6 +63,8 @@ def clean_val(val):
 
 
 # LLM-generated Markdown is not 100% consistent...
+# TODO: normalize tags *much* more aggressively, getting rid of
+# things that should be merged together as "clothing", etc.
 #
 key_aliases = {
     "accessory": "accessories",

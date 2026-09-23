@@ -3,6 +3,8 @@
 Convert the dataset JSON schema into a single "paragraph" of
 "keyword: value" text. Basically the exact same prompt without
 the JSON chartjunk.
+
+TODO: normalize & de-dupe fields
 """
 
 import os
